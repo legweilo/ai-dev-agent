@@ -1,0 +1,25 @@
+services:
+  n8n:
+    build: .
+    ports:
+      - "5678:5678"
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - ./config.json:/home/node/config.json:ro
+    environment:
+      - N8N_HOST=0.0.0.0
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - N8N_RUNNERS_ENABLED=true
+      - TZ=UTC
+
+
+      # No basic auth, but user management enabled for owner setup
+      - N8N_BASIC_AUTH_ACTIVE=false
+      - DB_SQLITE_POOL_SIZE=1
+      - N8N_BLOCK_ENV_ACCESS_IN_NODE=false
+      - N8N_GIT_NODE_DISABLE_BARE_REPOS=true
+    restart: unless-stopped
+
+volumes:
+  n8n_data:
