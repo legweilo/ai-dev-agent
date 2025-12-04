@@ -1,346 +1,99 @@
 {
-  "name": "AI Code Agent: JIRA to Bitbucket PR",
+  "name": "AI Code Agent: Interactive JIRA to Bitbucket PR",
   "nodes": [
     {
       "parameters": {
-        "httpMethod": "POST",
-        "path": "jira-webhook",
-        "options": {
-          "responseCode": 200
-        },
-        "authentication": "headerAuth",
-        "headerAuthName": "Webhook Secret"
+        "url": "={{ $json.Value }}/rest/api/3/issue/VIP-4878",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "options": {}
       },
-      "id": "webhook-1",
-      "name": "JIRA Webhook",
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 2,
-      "position": [220, 300]
+      "id": "53e4f458-9c7a-4e84-a6c5-9162961d1a38",
+      "name": "Fetch JIRA Tickets1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        688,
+        0
+      ],
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "KUa0NRW1TiuOD2nG",
+          "name": "JIRA Basic Auth"
+        }
+      }
     },
     {
-      "parameters": {
-        "filePath": "/home/node/config.json"
-      },
-      "id": "read-config",
-      "name": "Read Config",
-      "type": "n8n-nodes-base.readBinaryFile",
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
-      "position": [440, 300]
+      "position": [
+        256,
+        0
+      ],
+      "id": "10deab3d-8ffd-4c9c-87bf-8d8d423c16ab",
+      "name": "When clicking ‘Execute workflow’"
     },
     {
       "parameters": {
-        "mode": "runOnceForEachItem",
-        "jsCode": "// Parse config JSON\nreturn {\n  json: JSON.parse($input.first().binary.data.data.toString('utf8'))\n};"
-      },
-      "id": "parse-config",
-      "name": "Parse Config",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 3,
-      "position": [660, 300]
-    },
-    {
-      "parameters": {
-        "authentication": "basicAuth",
-        "resource": "issue",
         "operation": "get",
-        "issueIdOrKey": "={{ $json.issue.key }}",
-        "returnAll": false
-      },
-      "id": "get-issue",
-      "name": "Get JIRA Issue",
-      "type": "@n8n/n8n-nodes-langchain.jira",
-      "typeVersion": 3,
-      "position": [880, 300],
-      "credentials": {
-        "jiraApi": {
-          "id": "your-jira-creds-id",
-          "name": "JIRA Creds"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "mode": "runOnceForEachItem",
-        "jsCode": "// Prepare prompt data\nconst issue = $input.first().json;\nconst summary = issue.fields.summary || '';\nconst description = issue.fields.description || '';\nconst comments = (issue.fields.comment?.comments || []).map(c => c.body).join('\\n');\nreturn {\n  json: {\n    description: `${summary}\\n\\n${description}`,\n    comments: comments,\n    issueKey: issue.key\n  }\n};"
-      },
-      "id": "prepare-prompt",
-      "name": "Prepare AI Prompt",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 3,
-      "position": [1100, 300]
-    },
-    {
-      "parameters": {
-        "repositoryUrl": "={{ $node['Parse Config'].json.project.repo_url }}",
-        "branch": "={{ $node['Parse Config'].json.project.branch }}",
-        "targetPath": "={{ $node['Parse Config'].json.project.clone_path }}",
-        "operation": "clone"
-      },
-      "id": "git-clone",
-      "name": "Git Clone",
-      "type": "n8n-nodes-base.git",
-      "typeVersion": 2,
-      "position": [1320, 300],
-      "credentials": {
-        "gitSsh": {
-          "id": "your-git-creds-id",
-          "name": "Git SSH Creds"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "command": "cd {{ $node['Parse Config'].json.project.clone_path }} && git checkout -b ai/{{ $node['Prepare AI Prompt'].json.issueKey.toLowerCase() }} || git checkout ai/{{ $node['Prepare AI Prompt'].json.issueKey.toLowerCase() }}"
-      },
-      "id": "create-branch",
-      "name": "Create Feature Branch",
-      "type": "n8n-nodes-base.executeCommand",
-      "typeVersion": 2,
-      "position": [1540, 300]
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "={{ $node['Parse Config'].json.ai.endpoint }}",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
+        "dataTableId": {
+          "__rl": true,
+          "value": "Config",
+          "mode": "list",
+          "cachedResultName": "ENV VARIABLES"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
             {
-              "name": "Content-Type",
-              "value": "application/json"
-            },
-            {
-              "name": "x-api-key",
-              "value": "={{ $node['Parse Config'].json.ai.api_key }}"
+              "keyName": "Key",
+              "keyValue": "JIRA_URL"
             }
           ]
         },
-        "sendBody": true,
-        "contentType": "json",
-        "body": "={{\n  \"model\": \"{{ $node['Parse Config'].json.ai.model }}\",\n  \"temperature\": {{ $node['Parse Config'].json.ai.temperature }},\n  \"max_tokens\": 4096,\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"You are a code expert. Generate a unified diff (git format) to implement: {{ $json.description }}. Include comments from: {{ $json.comments }}. Output ONLY the diff patch - no explanations.\"\n    }\n  ]\n}}"
+        "limit": 1
       },
-      "id": "call-ai",
-      "name": "Call AI",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 5,
-      "position": [1760, 300]
-    },
-    {
-      "parameters": {
-        "filePath": "/tmp/diff.patch",
-        "dataPropertyName": "body"
-      },
-      "id": "write-diff",
-      "name": "Write Diff File",
-      "type": "n8n-nodes-base.writeBinaryFile",
-      "typeVersion": 2,
-      "position": [1980, 300]
-    },
-    {
-      "parameters": {
-        "command": "cd {{ $node['Parse Config'].json.project.clone_path }} && git apply /tmp/diff.patch --ignore-whitespace"
-      },
-      "id": "apply-diff",
-      "name": "Apply Diff",
-      "type": "n8n-nodes-base.executeCommand",
-      "typeVersion": 2,
-      "position": [2200, 300]
-    },
-    {
-      "parameters": {
-        "operation": "commit",
-        "repositoryPath": "={{ $node['Parse Config'].json.project.clone_path }}",
-        "message": "=AI fix for {{ $node['Prepare AI Prompt'].json.issueKey }}",
-        "branch": "=ai/{{ $node['Prepare AI Prompt'].json.issueKey.toLowerCase() }}",
-        "all": true
-      },
-      "id": "git-commit",
-      "name": "Git Commit",
-      "type": "n8n-nodes-base.git",
-      "typeVersion": 2,
-      "position": [2420, 300]
-    },
-    {
-      "parameters": {
-        "operation": "push",
-        "repositoryPath": "={{ $node['Parse Config'].json.project.clone_path }}",
-        "branch": "=ai/{{ $node['Prepare AI Prompt'].json.issueKey.toLowerCase() }}",
-        "force": true
-      },
-      "id": "git-push",
-      "name": "Git Push",
-      "type": "n8n-nodes-base.git",
-      "typeVersion": 2,
-      "position": [2640, 300]
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "={{ $node['Parse Config'].json.bitbucket.url }}/repositories/{{ $node['Parse Config'].json.bitbucket.workspace }}/{{ $node['Parse Config'].json.bitbucket.repo_slug }}/pullrequests",
-        "sendHeaders": true,
-        "sendBody": true,
-        "contentType": "json",
-        "body": "={{\n  \"title\": \"AI Fix: {{ $node['Prepare AI Prompt'].json.issueKey }}\",\n  \"source\": {\n    \"branch\": {\n      \"name\": \"ai/{{ $node['Prepare AI Prompt'].json.issueKey.toLowerCase() }}\"\n    }\n  },\n  \"destination\": {\n    \"branch\": {\n      \"name\": \"{{ $node['Parse Config'].json.project.branch }}\"\n    }\n  },\n  \"description\": \"{{ $node['Prepare AI Prompt'].json.description.substring(0, 500) }}...\"\n}}"
-      },
-      "id": "create-pr",
-      "name": "Create Bitbucket PR",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 5,
-      "position": [2860, 300]
-    },
-    {
-      "parameters": {
-        "authentication": "basicAuth",
-        "resource": "issue",
-        "operation": "addComment",
-        "issueIdOrKey": "={{ $node['Prepare AI Prompt'].json.issueKey }}",
-        "comment": "=AI-generated PR ready: {{ $('Create Bitbucket PR').json.links.html.href }}. Review and approve!"
-      },
-      "id": "jira-comment",
-      "name": "Comment on JIRA",
-      "type": "@n8n/n8n-nodes-langchain.jira",
-      "typeVersion": 3,
-      "position": [3080, 300]
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        464,
+        0
+      ],
+      "id": "c40cb466-8edf-4346-8179-c794aebcbacd",
+      "name": "Get row(s)",
+      "alwaysOutputData": false
     }
   ],
+  "pinData": {},
   "connections": {
-    "JIRA Webhook": {
+    "Parse Config (Schedule)": {
       "main": [
         [
           {
-            "node": "Read Config",
+            "node": "Fetch JIRA Tickets",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Read Config": {
+    "When clicking ‘Execute workflow’": {
       "main": [
         [
           {
-            "node": "Parse Config",
+            "node": "Get row(s)",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Parse Config": {
+    "Get row(s)": {
       "main": [
         [
           {
-            "node": "Get JIRA Issue",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Get JIRA Issue": {
-      "main": [
-        [
-          {
-            "node": "Prepare AI Prompt",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Prepare AI Prompt": {
-      "main": [
-        [
-          {
-            "node": "Git Clone",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Git Clone": {
-      "main": [
-        [
-          {
-            "node": "Create Feature Branch",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Create Feature Branch": {
-      "main": [
-        [
-          {
-            "node": "Call AI",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Call AI": {
-      "main": [
-        [
-          {
-            "node": "Write Diff File",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Write Diff File": {
-      "main": [
-        [
-          {
-            "node": "Apply Diff",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Apply Diff": {
-      "main": [
-        [
-          {
-            "node": "Git Commit",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Git Commit": {
-      "main": [
-        [
-          {
-            "node": "Git Push",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Git Push": {
-      "main": [
-        [
-          {
-            "node": "Create Bitbucket PR",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Create Bitbucket PR": {
-      "main": [
-        [
-          {
-            "node": "Comment on JIRA",
+            "node": "Fetch JIRA Tickets1",
             "type": "main",
             "index": 0
           }
@@ -348,13 +101,22 @@
       ]
     }
   },
+  "active": false,
   "settings": {
     "executionOrder": "v1"
   },
-  "pinData": {},
-  "versionId": "2",
+  "versionId": "40b365ce-3a23-4a31-b9b7-ae9402525d83",
   "meta": {
-    "templateCredsSetupCompleted": true
+    "templateCredsSetupCompleted": true,
+    "instanceId": "59e708a5a8709322e16f0dfe90498701845ef0cb2d429a20392204d6bdb352f5",
+    "configUpdated": true,
+    "configValues": {
+      "jira_project": "VIP",
+      "jira_user": "pfortin@expertime.com",
+      "repo": "git@bitbucket.org:pernod-ricard/lecercle-prestige-asia.git",
+      "branch": "main"
+    }
   },
-  "active": false
+  "id": "99tZBELu7zUo821D",
+  "tags": []
 }

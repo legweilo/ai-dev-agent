@@ -32,24 +32,12 @@ cd ai-dev-agent
 Edit `config.json` with your project details:
 
 ```json
-{
-  "project": {
-    "repo_url": "git@bitbucket.org:your-workspace/your-repo.git",
-    "branch": "main",
-    "clone_path": "/tmp/project"
-  },
-  "ai": {
-    "endpoint": "https://api.anthropic.com/v1/messages",
-    "api_key": "your-api-key-here",
-    "model": "claude-3-5-sonnet-20241022",
-    "temperature": 0.3
-  },
-  "bitbucket": {
-    "url": "https://api.bitbucket.org/2.0",
-    "workspace": "your-workspace",
-    "repo_slug": "your-repo"
+[
+  {
+    "Key": "JIRA_URL",
+    "Value": "your-jira-instance-url"
   }
-}
+]
 ```
 
 ### 3. Start n8n
