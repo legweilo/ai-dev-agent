@@ -94,7 +94,7 @@
       "main": [
         [
           {
-            "node": "Fetch JIRA Tickets1",
+            "node": "Fetch JIRA Tickets",
             "type": "main",
             "index": 0
           },

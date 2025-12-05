@@ -1,6 +1,15 @@
 # AI Dev Agent
 
+**WARNING** - Not production-ready, use at your own risk.
+
+-------
+
 All-in-one solution to automate coding/bug fixing based on Agile user stories. An n8n server orchestrates ticket reading from JIRA/Bitbucket, pulls the repo, fixes the issue using AI, and creates a pull request. Once ready, a notification is shared on Slack.
+
+### Current status: 
+Single flow that get a ticket info from JIRA.
+
+
 
 ## 🚀 Features
 
@@ -36,7 +45,8 @@ Edit `config.json` with your project details:
   {
     "Key": "JIRA_URL",
     "Value": "your-jira-instance-url"
-  }
+  },
+  ...
 ]
 ```
 
@@ -52,7 +62,6 @@ sudo docker-compose up -d
 - **Email**: admin@example.com
 - **Password**: ChangeMe123
 
-⚠️ **Change the default password after first login!**
 
 ## 📦 What's Included
 
@@ -64,22 +73,10 @@ sudo docker-compose up -d
 
 ## 🔧 Configuration
 
-### Environment Variables
-
-You can customize the admin credentials in `docker-compose.yml`:
-
-```yaml
-environment:
-  - N8N_OWNER_EMAIL=admin@example.com
-  - N8N_OWNER_PASSWORD=ChangeMe123
-```
-
 ### Persistent Data
 
 All n8n data is stored in a Docker volume:
-- **Volume name**: `ai-dev-agent_n8n_data`
-- **Location**: `/var/snap/docker/common/var-lib-docker/volumes/ai-dev-agent_n8n_data/_data`
-- **Contents**: Database, workflows, SSH keys, Git repos, credentials
+- **Volume name**: `ai-dev-agent-n8n-1`
 
 ## 📝 Usage
 
@@ -99,35 +96,7 @@ sudo docker-compose down
 
 ```bash
 sudo docker-compose down -v  # Removes volumes
-sudo docker-compose up -d
-```
-
-### Access Persistent Data
-
-```bash
-sudo ls -la /var/snap/docker/common/var-lib-docker/volumes/ai-dev-agent_n8n_data/_data
-```
-
-## 🔄 How It Works
-
-1. **Container Starts**: n8n starts in the background
-2. **Auto-Setup**: Entrypoint script creates admin user via REST API (first run only)
-3. **Workflow Import**: AI agent workflow is imported and activated
-4. **Ready**: n8n is accessible at http://localhost:5678
-
-### Owner Creation
-
-- ✅ **First run**: Creates admin user automatically
-- ✅ **Subsequent runs**: Detects existing owner, skips creation
-- ✅ **Persistent**: User data survives container restarts
-
-## 🐛 Troubleshooting
-
-### Landing on Setup Page
-
-If you see the setup page despite successful owner creation:
-```bash
-sudo docker-compose down -v
+sudo docker system prune -a --volumes # Cleans up unused data
 sudo docker-compose up -d
 ```
 
@@ -138,19 +107,10 @@ Permission warnings on config files are suppressed via:
 - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=false
 ```
 
-### Check if User Exists
-
-```bash
-sudo sqlite3 /var/snap/docker/common/var-lib-docker/volumes/ai-dev-agent_n8n_data/_data/database.sqlite "SELECT email FROM user;"
-```
-
-## 📚 Additional Documentation
-
-See [SETUP_GUIDE.md](SETUP_GUIDE.md) for detailed setup instructions and troubleshooting.
 
 ## 🔐 Security Notes
 
-- Change default credentials immediately after first login
+- Change default credentials after first login
 - Keep your API keys secure and never commit them to Git
 - Use environment variables for sensitive data in production
 
@@ -158,7 +118,4 @@ See [SETUP_GUIDE.md](SETUP_GUIDE.md) for detailed setup instructions and trouble
 
 See [LICENSE](LICENSE) file for details.
 
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
 

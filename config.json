@@ -4,11 +4,11 @@
     "Value": ""
   },
   {
-    "Key": "JIRA_LOGIN",
+    "Key": "CREDENTIAL_JIRA_LOGIN",
     "Value": ""
   },
   {
-    "Key": "JIRA_PASSWORD",
+    "Key": "CREDENTIAL_JIRA_PASSWORD",
     "Value": ""
   }
 ]

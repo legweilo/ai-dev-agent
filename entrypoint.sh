@@ -18,6 +18,45 @@ if [ -f "/home/node/.n8n/workflows/ai-agent.json" ]; then
   echo "Workflow import completed"
 fi
 
+####################################################################
+###################### Import Credentials ##########################
+####################################################################
+
+echo "Creating credentials from config.json..."
+
+# Extract credentials from config.json
+JIRA_LOGIN=$(jq -r '.[] | select(.Key == "CREDENTIAL_JIRA_LOGIN") | .Value' /home/node/config.json)
+JIRA_PASSWORD=$(jq -r '.[] | select(.Key == "CREDENTIAL_JIRA_PASSWORD") | .Value' /home/node/config.json)
+
+if [ -n "$JIRA_LOGIN" ] && [ -n "$JIRA_PASSWORD" ]; then
+  # Create credential JSON file for n8n CLI import (must be a plain array)
+  cat > /tmp/jira-credentials.json <<EOF
+[
+  {
+    "id": "jira-basic-auth-credential",
+    "name": "JIRA Basic Auth",
+    "type": "httpBasicAuth",
+    "data": {
+      "user": "$JIRA_LOGIN",
+      "password": "$JIRA_PASSWORD"
+    }
+  }
+]
+EOF
+
+  echo "Importing JIRA credentials via n8n CLI..."
+  n8n import:credentials --input=/tmp/jira-credentials.json 2>&1 | grep -v "Could not find credential" || true
+
+  # Cleanup
+  rm -f /tmp/jira-credentials.json
+
+  echo "JIRA Basic Auth credential imported successfully"
+else
+  echo "JIRA credentials not found in config.json, skipping credential creation"
+fi
+
+####################################################################
+
 echo "Starting n8n to complete setup..."
 
 # Start n8n in background (detached)
@@ -81,9 +120,15 @@ CREATE TABLE IF NOT EXISTS "data_table_user_$TABLE_ID" (
 );
 SQL
 
-# 4. Import data from JSON file into the data table
+# 4. Import data from JSON file into the data table (excluding CREDENTIAL_* fields)
 jq -c '.[]' /home/node/config.json | while read -r row; do
     key_val=$(echo "$row" | jq -r '.Key')
+
+    # Skip keys starting with "CREDENTIAL_"
+    if echo "$key_val" | grep -q "^CREDENTIAL_"; then
+        continue
+    fi
+
     value_escaped=$(echo "$row" | jq -r '.Value // ""' | sed "s/'/''/g")
 
   sqlite3 /home/node/.n8n/database.sqlite >/dev/null <<SQL
@@ -94,6 +139,8 @@ done
 
 
 echo "Data Table 'Config' is now created and seeded."
+
+
 
 else
     echo "-- Not first container startup, skipping initialization and directly starting n8n... --"
