@@ -12,7 +12,7 @@ services:
       - N8N_PROTOCOL=http
       - N8N_RUNNERS_ENABLED=true
       - TZ=UTC
-
+      - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=false
 
       # No basic auth, but user management enabled for owner setup
       - N8N_BASIC_AUTH_ACTIVE=false

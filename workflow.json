@@ -9,7 +9,7 @@
         "options": {}
       },
       "id": "53e4f458-9c7a-4e84-a6c5-9162961d1a38",
-      "name": "Fetch JIRA Tickets1",
+      "name": "Fetch JIRA Tickets",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
@@ -39,9 +39,10 @@
         "operation": "get",
         "dataTableId": {
           "__rl": true,
-          "value": "Config",
+          "value": "SUPERAIUNIQUEIDYEAAAAH",
           "mode": "list",
-          "cachedResultName": "ENV VARIABLES"
+          "cachedResultName": "Config",
+          "cachedResultUrl": "/projects/1NUmPdgyltiA4wEf/datatables/SUPERAIUNIQUEIDYEAAAAH"
         },
         "matchType": "allConditions",
         "filters": {
@@ -96,6 +97,11 @@
             "node": "Fetch JIRA Tickets1",
             "type": "main",
             "index": 0
+          },
+          {
+            "node": "Fetch JIRA Tickets",
+            "type": "main",
+            "index": 0
           }
         ]
       ]
@@ -105,10 +111,10 @@
   "settings": {
     "executionOrder": "v1"
   },
-  "versionId": "40b365ce-3a23-4a31-b9b7-ae9402525d83",
+  "versionId": "e0529b0b-df02-476f-8dc2-261a8cd7e4a9",
   "meta": {
     "templateCredsSetupCompleted": true,
-    "instanceId": "59e708a5a8709322e16f0dfe90498701845ef0cb2d429a20392204d6bdb352f5",
+    "instanceId": "7c825cb46c679f8eee5f357feffdc9f676c92d31cfe8a678be8230a38ba34e1a",
     "configUpdated": true,
     "configValues": {
       "jira_project": "VIP",

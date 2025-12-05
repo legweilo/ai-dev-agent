@@ -12,6 +12,7 @@ RUN mkdir -p /home/node/.n8n/workflows
 COPY config.json /home/node/config.json
 COPY workflow.json /tmp/workflow.json
 
+
 # Make sure sqlite3 is available (only 30 KB)
 RUN apk add --no-cache sqlite
 

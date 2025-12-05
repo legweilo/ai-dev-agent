@@ -2,5 +2,13 @@
   {
     "Key": "JIRA_URL",
     "Value": ""
+  },
+  {
+    "Key": "JIRA_LOGIN",
+    "Value": ""
+  },
+  {
+    "Key": "JIRA_PASSWORD",
+    "Value": ""
   }
 ]
